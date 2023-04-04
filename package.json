@@ -1,7 +1,7 @@
 {
-  "name": "drug-dsp",
+  "name": "scan",
   "version": "1.0.0",
-  "description": "产品专栏",
+  "description": "扫码",
   "author": "caolu <64294@yangzijiang.com>",
   "private": true,
   "scripts": {

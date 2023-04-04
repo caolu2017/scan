@@ -1,6 +1,6 @@
-# drug-dsp
+# scan
 
-> 产品专栏
+> 扫码
 
 ## Build Setup
 
