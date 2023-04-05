@@ -62,7 +62,7 @@ export function get (url, params) {
         resolve(data.data)
       } else {
         Toast({
-          duration: 100, // 持续展示 toast
+          duration: 1000, // 持续展示 toast
           forbidClick: true,
           message: response.msg || '请求失败',
         })
@@ -70,7 +70,7 @@ export function get (url, params) {
       }
     }).catch(error => {
       Toast({
-        duration: 100, // 持续展示 toast
+        duration: 1000, // 持续展示 toast
         forbidClick: true,
         message: error || '请求错误',
       })
@@ -99,7 +99,7 @@ export function post (url, params) {
         resolve(data.data)
       } else {
         Toast({
-          duration: 100, // 持续展示 toast
+          duration: 1000, // 持续展示 toast
           forbidClick: true,
           message: response.msg || '请求失败',
         })
@@ -108,7 +108,7 @@ export function post (url, params) {
     }).catch(error => {
       console.log(error, 'error')
       Toast({
-        duration: 100, // 持续展示 toast
+        duration: 1000, // 持续展示 toast
         forbidClick: true,
         message: '请求失败',
       })

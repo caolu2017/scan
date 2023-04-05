@@ -58,7 +58,7 @@
       @focus="handleFocus" 
       @blur="handleBlur" 
       label="工票號碼" 
-      :disabled="!(msg.includes('請掃描製程卡')||msg.includes('已完成收入報工'))"
+      :disabled="!(msg.includes('請掃描製程卡')||msg.includes('掃描成功')||msg.includes('掃描失敗'))"
       placeholder="請掃描工票條碼號"
       @input="handleInput"
       ref="searchInput"
@@ -74,7 +74,7 @@
       ref="searchInput"
       @keyup.enter.native="handlecommit" />  -->
     </van-cell-group>
-    <div class="msg">{{msg}}</div>
+    <div v-if="msg" :class="[{'err':msg=='掃描失敗'},'msg']">{{msg}}</div>
   </van-form>
 
   <div class="scan">
@@ -107,10 +107,11 @@ import { getSession, getCookie } from '@/utils';
 import { getProcess, getLines, workProgressCommit } from '@/api';
 const msge = [
       '',
-      '製程獲取完成，請選擇產線',
-      '製程獲取完成，請掃描製程卡',
-      '產線獲取完成，請掃描製程卡',
-      '已完成收入報工'
+      '',
+      '請掃描製程卡',
+      '請掃描製程卡',
+      '掃描成功',
+      '掃描失敗'
     ]
     const userInfo = getSession('userInfo')&&JSON.parse(getSession('userInfo'))
     
@@ -135,7 +136,7 @@ export default {
       factoryname: JSON.parse(getSession('userInfo')).factoryname,
       nextCode:'',
       code:'',
-
+      codeInfo:''
     }
   },
 
@@ -146,28 +147,23 @@ export default {
   },
 
   created(){
-    if(this.process.text!='物流'){
-      getLines({
-        factoryID: JSON.parse(getSession('userInfo')).factoryID
-      }).then((data)=>{
-        this.cx = data.map(i=>{return {...i, text: i.name, value: i.id}}).slice(0)
-        this.msg = msge[3]
-      })
-    }else{
-      getLines({
-        factoryID: JSON.parse(getSession('userInfo')).factoryID
-      }).then((data)=>{
-        this.cx = data.map(i=>{return {...i, text: i.name, value: i.id}}).slice(0)
-        this.msg = msge[1]
-      })
-    }
+    console.log('focu11s',this.process.text)
+    
     this.init()
   },
 
-  mounted(){
-    // this.addScanMonitor()
+  // mounted(){
+  //   // this.addScanMonitor()
+  //   if(this.process.text!='物流'){
+  //     const that = this
+  //     setTimeout(()=>{
+  //       that.$refs.searchInput.focus();
+  //       console.log('focus', that.$refs.searchInput)
+  //     }, 5000)
+      
+  //   }
    
-  },
+  // },
 
 
   methods: {
@@ -210,6 +206,7 @@ export default {
       }
     },
     handleInput(e){
+      this.codeInfo = e
       let a=e.indexOf(",")
       if(a>-1){
         let l =e.substring(0,a)
@@ -279,36 +276,45 @@ export default {
         processID: process.id,
         processCode: processCode,
         lineID: this.line.id,
-        workType: 'I'
+        workType: 'I',
+        codeInfo: this.codeInfo,
+        userID: JSON.parse(getSession('userInfo')).userID
       }).then((data)=>{
         this.info = data
         this.msg = msge[4]
         
+      }).catch(()=>{
+        this.msg = msge[5]
       }).finally(()=>{
         this.$nextTick( () => {
-          this.$refs.searchInput.blur();
+          this.$refs.searchInput.focus();
         })
         this.invoiceNO = ''
       })
     },
 
     init(){
+      if(this.process.text!='物流'){
+        getLines({
+          factoryID: JSON.parse(getSession('userInfo')).factoryID
+        }).then((data)=>{
+          this.cx = data.map(i=>{return {...i, text: i.name, value: i.id}}).slice(0)
+          this.msg = msge[3]
+          this.$nextTick( () => {
+            this.$refs.searchInput&&this.$refs.searchInput.focus();
+          })
+        })
+      }else{
+        getLines({
+          factoryID: JSON.parse(getSession('userInfo')).factoryID
+        }).then((data)=>{
+          this.cx = data.map(i=>{return {...i, text: i.name, value: i.id}}).slice(0)
+          this.msg = msge[1]
+        })
+      }
       getProcess().then((data)=>{
         this.zc = data.map(i=>{return {...i, text: i.name, value: i.id}})
       })
-      // const data = [{
-      //   'name':'车缝',
-      //   'comments':'beizhu',
-      //   'id':1,
-      //   'code':'TOP'
-      // },
-      // {
-      //   'name':'物流',
-      //   'comments':'beizhu',
-      //   'id':2,
-      //   'code':'TOP'
-      // }]
-      // this.zc = data.map(i=>{return {...i, text: i.name, value: i.id}})
     }
   }
 }
@@ -360,7 +366,14 @@ export default {
   border-radius: 10px;
   font-size: 32px;
 
+  &.err{
+    background: #f9f2f4;
+    color: red;
   }
+
+  }
+
+
 
   .info{
     padding: 40px 30px 50px;

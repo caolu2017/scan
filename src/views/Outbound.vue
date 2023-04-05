@@ -66,7 +66,7 @@
       @focus="handleFocus" 
       @blur="handleBlur" 
       label="工票號碼" 
-      :disabled="!(msg.includes('請掃描製程卡')||msg.includes('已完成收入報工'))"
+      :disabled="!(msg.includes('請掃描製程卡')||msg.includes('掃描成功')||msg.includes('掃描失敗'))"
       placeholder="請掃描工票條碼號"
       @input="handleInput"
       ref="searchInput"
@@ -75,7 +75,7 @@
     </van-cell-group>
  
 
-    <div class="msg">{{msg}}</div>
+    <div v-if="msg" :class="[{'err':msg=='掃描失敗'},'msg']">{{msg}}</div>
   </van-form>
 
   <div class="scan">
@@ -106,11 +106,12 @@
 import { getSession, getCookie } from '@/utils';
 import { getProcess, getLines, workProgressCommit } from '@/api';
 const msge = [
+'',
       '',
-      '製程獲取完成，請選擇產線',
-      '製程獲取完成，請掃描製程卡',
-      '產線獲取完成，請掃描製程卡',
-      '已完成收入報工'
+      '請掃描製程卡',
+      '請掃描製程卡',
+      '掃描成功',
+      '掃描失敗'
     ]
     const userInfo = getSession('userInfo')&&JSON.parse(getSession('userInfo'))
     const factoryname = userInfo?userInfo.factoryname:''
@@ -134,6 +135,7 @@ export default {
       info: {},
       factoryname:JSON.parse(getSession('userInfo')).factoryname,
       factoryID:JSON.parse(getSession('userInfo')).factoryID,
+      codeInfo:''
     }
   },
 
@@ -144,21 +146,7 @@ export default {
   },
 
   created(){
-    if(this.process.text!='物流'){
-      getLines({
-        factoryID: JSON.parse(getSession('userInfo')).factoryID
-      }).then((data)=>{
-        this.cx = data.map(i=>{return {...i, text: i.name, value: i.id}}).slice(0)
-        this.msg = msge[3]
-      })
-    }else{
-      getLines({
-        factoryID: JSON.parse(getSession('userInfo')).factoryID
-      }).then((data)=>{
-        this.cx = data.map(i=>{return {...i, text: i.name, value: i.id}}).slice(0)
-        this.msg = msge[1]
-      })
-    }
+    
   },
 
   mounted(){
@@ -168,6 +156,7 @@ export default {
 
   methods: {
     handleInput(e){
+      this.codeInfo = e
       let a=e.indexOf(",")
       if(a>-1){
         let l =e.substring(0,a)
@@ -230,7 +219,7 @@ export default {
     },
 
     handlecommit (v){
-      console.log('handlecommit', this.invoiceNO)
+      console.log('handlecommit', this.codeInfo)
       // this.invoiceNO = this.invoiceNO&&this.invoiceNO.split(',')[0]
       const processCode = JSON.parse(getSession('userInfo')).processCode
       const process = this.zc.find(i=>i.code==processCode)
@@ -239,15 +228,19 @@ export default {
         processID: process.id,
         processCode: processCode,
         lineID: this.line.id,
+        codeInfo: this.codeInfo,
+        userID: JSON.parse(getSession('userInfo')).userID,
         workType: 'O'
       }).then((data)=>{
         this.info = data
         this.msg = msge[4]
        
-        
+      }).catch((e)=>{
+        console.log('ffff', e)
+        this.msg = msge[5]
       }).finally(()=>{
         this.$nextTick( () => {
-          this.$refs.searchInput.blur();
+          this.$refs.searchInput.focus();
         })
         this.invoiceNO = ''
       })
@@ -266,19 +259,24 @@ export default {
       getProcess().then((data)=>{
         this.zc = data.map(i=>{return {...i, text: i.name, value: i.id}})
       })
-      // const data = [{
-      //   'name':'车缝',
-      //   'comments':'beizhu',
-      //   'id':1,
-      //   'code':'TOP'
-      // },
-      // {
-      //   'name':'物流',
-      //   'comments':'beizhu',
-      //   'id':2,
-      //   'code':'TOP'
-      // }]
-      // this.zc = data.map(i=>{return {...i, text: i.name, value: i.id}})
+      if(this.process.text!='物流'){
+        getLines({
+          factoryID: JSON.parse(getSession('userInfo')).factoryID
+        }).then((data)=>{
+          this.cx = data.map(i=>{return {...i, text: i.name, value: i.id}}).slice(0)
+          this.msg = msge[3]
+          this.$nextTick( () => {
+            this.$refs.searchInput&&this.$refs.searchInput.focus();
+          })
+        })
+      }else{
+        getLines({
+          factoryID: JSON.parse(getSession('userInfo')).factoryID
+        }).then((data)=>{
+          this.cx = data.map(i=>{return {...i, text: i.name, value: i.id}}).slice(0)
+          this.msg = msge[1]
+        })
+      }
     }
   }
 }
@@ -329,7 +327,10 @@ export default {
   text-align: center;
   border-radius: 10px;
   font-size: 32px;
-
+  &.err{
+    background: #f9f2f4;
+    color: red;
+  }
   }
 
   .info{

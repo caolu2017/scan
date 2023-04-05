@@ -20,9 +20,9 @@ import ResizeObserver from 'resize-observer-polyfill'
 window.ResizeObserver = ResizeObserver
 import Vconsole from 'vconsole'
  
-var vConsole = new Vconsole()
+// var vConsole = new Vconsole()
  
-Vue.use(vConsole);
+// Vue.use(vConsole);
 
 /** 引入 Vant 所有控件 **/
 Vue.use(Lazyload)
