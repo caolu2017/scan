@@ -3,7 +3,8 @@ import Router from 'vue-router'
 import Inbound from '@/views/Inbound.vue'
 import Login from '@/views/Login.vue'
 import Outbound from '@/views/Outbound.vue'
-import Buttom from '@/views/index.vue'
+import Home from '@/views/home.vue'
+import Scan from '@/views/scan.vue'
 import { getSession, getCookie } from '@/utils'
 
 Vue.use(Router)
@@ -11,28 +12,32 @@ Vue.use(Router)
 const routes = [
   {
     path: '/',
-    name: 'Buttom',
-    component: Buttom,
-    meta: { title: '物流報入' },
+    name: 'Home',
+    component: Home,
+    meta: { title: '主页' },
     children: [
-      {
-        path: '',
-        name: 'Inbound',
-        component: Inbound,
-        meta: { title: '物流報入' }
-      },
-      {
-        path: '/out',
-        name: 'Outbound',
-        component: Outbound,
-        meta: { title: '物流領出' }
-      }
     ]
+  },
+  {
+    path: '/in',
+    name: 'Inbound',
+    component: Inbound,
+  },
+  {
+    path: '/out',
+    name: 'Outbound',
+    component: Outbound,
   },
   {
     path: '/login',
     name: 'Login',
     component: Login,
+    meta: { title: '' }
+  },
+  {
+    path: '/scan',
+    name: 'Scan',
+    component: Scan,
     meta: { title: '' }
   }
 ]
@@ -43,7 +48,7 @@ const router = new Router({
 
 router.beforeEach((to, from, next) => {
   window.document.title = to.meta.title || ' '
-  const userInfo = getSession('userInfo') && JSON.parse(getSession('userInfo'))
+  const userInfo = getCookie('userInfo') && JSON.parse(getCookie('userInfo'))
   // if(to.path== '/login'){
   //   if (JSON.parse(getCookie('userInfo')) && JSON.parse(getCookie('userInfo')).userID) {
   //     next('/')

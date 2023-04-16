@@ -1,81 +1,66 @@
 <template>
-  <div class="out-bound">
-    <div class="header">領出</div>
-  <van-form @failed="onFailed">
+  <div class="in-bound">
+    <van-nav-bar
+    title="出库扫描"
+    left-arrow
+    left-text="返回"
+    @click-left="onClickLeft"
+    >
+   </van-nav-bar>
+  <van-form >
     <van-cell-group inset>
       <van-field
         v-model="factoryname"
+        v-if="isWL"
         class="factory"
         readonly
-        label="廠區"
+        label="工厂"
       />
       <van-field
         v-model="process.text"
         class="factory"
         readonly
-        label="製程"
+        label="制程"
       />
-      <!-- <van-popup v-model:show="showPicker" round position="bottom">
-        <van-picker
-          :columns="columns"
-          @cancel="showPicker = false"
-          @confirm="onConfirm"
-        />
-      </van-popup> -->
-      <!-- <van-field
-        v-model="process.text"
-        class="factory"
-        is-link
-        readonly
-        name="picker"
-        label="製程"
-        placeholder="點擊選擇製程"
-        @click="showPicker1 = true"
-      /> -->
-      <!-- <van-popup v-model:show="showPicker1" round position="bottom">
-        <van-picker
-        show-toolbar
-          :columns="zc"
-          @cancel="showPicker1 = false"
-          @confirm="onZc"
-        />
-      </van-popup> -->
       <van-field
-      v-show="process.text=='物流'"
+        v-model="uuid"
+        class="factory"
+        readonly
+        label="出货单号"
+      />
+      <van-field
       class="factory"
-        v-model="line.text"
-        is-link
+      v-if="isWL"
+        v-model="line.txt"
         readonly
-        name="picker"
-        label="產線"
-        placeholder="點擊選擇產線"
-        @click="showPicker2 = true"
+        label="产线"
       />
-      <van-popup v-model:show="showPicker2" round position="bottom">
-        <van-picker
-        show-toolbar
-          :columns="cx"
-          @cancel="showPicker2 = false"
-          @confirm="onXc"
-        />
-      </van-popup>
       
+      <van-field 
+      :class="isCwFocus?'active-input':''" 
+      v-if="haschuwei"
+      v-model="locNo" 
+      @focus="handleCFocus" 
+      @blur="handleCBlur" 
+      label="储位" 
+      placeholder="请扫描储位"
+      @input="handleCInput"
+      id="chuwei"
+      @keyup.enter.native="handlecommit"
+      ref="chuwei" /> 
       <van-field 
       :class="isFocus?'active-input':''" 
       v-model="invoiceNO" 
       @focus="handleFocus" 
       @blur="handleBlur" 
-      label="工票號碼" 
-      :disabled="!(msg.includes('請掃描製程卡')||msg.includes('掃描成功')||msg.includes('掃描失敗'))"
-      placeholder="請掃描工票條碼號"
+      label="工票号码" 
+      id="invoice"
+      placeholder="请扫描工票条形码号"
       @input="handleInput"
       ref="searchInput"
       @keyup.enter.native="handlecommit" /> 
-     
     </van-cell-group>
- 
-
-    <div v-if="msg" :class="[{'err':msg=='掃描失敗'},'msg']">{{msg}}</div>
+    <div v-if="msg" :class="[{'err':msg=='扫描失败'},'msg']">{{msg}}</div>
   </van-form>
 
   <div class="scan">
@@ -85,39 +70,49 @@
   <van-cell-group inset class="info">
     <div class="line1">
       <div><span>款式:</span> {{ info.styleno }} </div>
-      <div><span>總數量:</span> {{ info.totalqty }}</div>
+      <div><span>总数量:</span> {{ info.totalqty }}</div>
     </div>
     <div class="card">
       <div class="card-item title">
-        <span>顏色</span>
-        <span>尺碼</span>
-        <span>數量</span>
+        <span>颜色</span>
+        <span>尺码</span>
+        <span>数量</span>
       </div>
-      <div class="card-item value">
-        <span>{{ info.clrno }}</span>
-        <span>{{ info.size }}</span>
-        <span>{{ info.qty }}</span>
+      <div v-for="(item, index) in dataDetail" :key="index" class="card-item value">
+        <span>{{ item.clrno }}</span>
+        <span>{{ item.size }}</span>
+        <span>{{ item.qty }}</span>
       </div>
     </div>
   </van-cell-group>
+
+    <div class="btns">
+      <van-button type="danger" @click="onClear">清空</van-button>
+      <van-button style="marginLeft: 30px" type="primary" @click="onComplete">扫描完成</van-button>
+    </div>
+    <audio id="audio"  src="../assets/ok.mp3"></audio>
+    <audio id="audio-err" src="../assets/err.mp3"></audio>
   </div>
 </template>
+
 <script>
 import { getSession, getCookie } from '@/utils';
 import { getProcess, getLines, workProgressCommit } from '@/api';
+import { Dialog } from 'vant';
+
+
 const msge = [
-'',
-      '',
-      '請掃描製程卡',
-      '請掃描製程卡',
-      '掃描成功',
-      '掃描失敗'
+      '扫描成功',
+      '扫描失败'
     ]
-    const userInfo = getSession('userInfo')&&JSON.parse(getSession('userInfo'))
+    const userInfo = getCookie('userInfo')&&JSON.parse(getCookie('userInfo'))
+    let music = null
+    let music1 = null
     const factoryname = userInfo?userInfo.factoryname:''
-    const factoryID = userInfo?userInfo.factoryID:''
+   
+
 export default {
-  name: 'Outbound',
+  name: 'Inbound',
   data () {
     return {
       msg: '',
@@ -126,16 +121,21 @@ export default {
       showPicker1: false,
       showPicker2: false,
       isFocus: false,
+      isCwFocus: false,
       invoiceNO: '',
-      process: {text: JSON.parse(getSession('userInfo')).processName},
-      line: {text: ''},
-      zc: [],
+      process: {text: JSON.parse(getCookie('userInfo')).processName},
+      line: this.$route.query.line,
+      uuid: this.$route.query.uuid,
       cx: [],
-      step: 0,
       info: {},
-      factoryname:JSON.parse(getSession('userInfo')).factoryname,
-      factoryID:JSON.parse(getSession('userInfo')).factoryID,
-      codeInfo:''
+      factoryname: JSON.parse(getCookie('userInfo')).factoryname,
+      isWL: JSON.parse(getCookie('userInfo')).processCode=='WL',
+      haschuwei: ['WL', 'YP'].includes(JSON.parse(getCookie('userInfo')).processCode),
+      nextCode:'',
+      code:'',
+      codeInfo:'',
+      dataDetail: [],
+      locNo:''
     }
   },
 
@@ -151,10 +151,40 @@ export default {
 
   mounted(){
     this.init()
+    music = document.getElementById("audio");
+    music1 = document.getElementById("audio");
+    console.log('xxxxxxxx',this.$route.query.line)
   },
 
 
   methods: {
+    onClear(){
+      Dialog.confirm({
+      message: '确认清空',
+    })
+      .then(() => {
+        this.chuwei = ''
+        this.invoiceNO = ''
+        if(this.haschuwei){
+          this.$nextTick( () => {
+            this.$refs.chuwei.focus();
+            setTimeout(()=>{
+            plus.key.hideSoftKeybord()
+          },1)
+          })
+        }else{
+          this.$nextTick( () => {
+            this.$refs.searchInput.focus();
+            setTimeout(()=>{
+            plus.key.hideSoftKeybord()
+          },1)
+          })
+        }
+      })
+      .catch(() => {
+        // on cancel
+      });
+    },
     handleInput(e){
       this.codeInfo = e
       let a=e.indexOf(",")
@@ -163,23 +193,44 @@ export default {
         this.invoiceNO = l
       }
     },
+    handleCInput(e){
+      let a=e.indexOf(",")
+      if(a>-1){
+        let l =e.substring(0,a)
+        this.locNo = l
+      }
+    },
     onConfirm({ selectedOptions }) {
       this.showPicker = false;
       this.fieldValue = selectedOptions[0].text;
     },
 
     handleFocus(){
-      if(!this.msg.includes('請掃描製程卡')&&this.msg!='已完成收入報工') return
       this.isFocus = true;
+      document.querySelector('#invoice').setAttribute('readonly', 'readonly')
+      setTimeout(() => {
+        document.querySelector('#invoice').removeAttribute('readonly');
+      }, 200);
+      plus.key.hideSoftKeybord()
+    },
+    handleCFocus(){
+      this.isCwFocus = true;
+      document.querySelector('#chuwei').setAttribute('readonly', 'readonly')
+      setTimeout(() => {
+        document.querySelector('#chuwei').removeAttribute('readonly');
+      }, 200);
+      plus.key.hideSoftKeybord()
     },
 
     handleBlur () {
       this.isFocus = false;
     },
+    handleCBlur () {
+      this.isCwFocus = false;
+    },
 
     getCode(code){ // 获取到扫码枪输入的内容，做别的操作
       this.invoiceNO = code&&code.split(',')[0]
-      this.handlecommit()
     },
 
     onXc(value, index){
@@ -188,20 +239,21 @@ export default {
       this.msg = msge[3]
       this.$nextTick( () => {
         this.$refs.searchInput.focus();
+        setTimeout(()=>{
+            plus.key.hideSoftKeybord()
+          },1)
       })
       this.invoiceNO=''
       this.info={}
     },
 
     onZc(value, index){
-      console.log('value212', JSON.parse(getSession('userInfo')).factoryID)
       this.process = value
       this.showPicker1 = false
       if(value.text=='物流'){
         getLines({
-          factoryID: JSON.parse(getSession('userInfo')).factoryID
+          factoryID: JSON.parse(getCookie('userInfo')).factoryID
         }).then((data)=>{
-          console.log('sssddssd', data)
           this.cx = data.map(i=>{return {...i, text: i.name, value: i.id}}).slice(0)
           this.msg = msge[1]
         })
@@ -210,6 +262,9 @@ export default {
         this.line = {text:''};
         this.$nextTick( () => {
           this.$refs.searchInput.focus();
+          setTimeout(()=>{
+            plus.key.hideSoftKeybord()
+          },1)
         })
       }
       
@@ -219,64 +274,107 @@ export default {
     },
 
     handlecommit (v){
-      console.log('handlecommit', this.codeInfo)
-      // this.invoiceNO = this.invoiceNO&&this.invoiceNO.split(',')[0]
-      const processCode = JSON.parse(getSession('userInfo')).processCode
-      const process = this.zc.find(i=>i.code==processCode)
-      workProgressCommit({
+      const params = {
         invoiceNO: this.invoiceNO,
-        processID: process.id,
-        processCode: processCode,
-        lineID: this.line.id,
+        processID: JSON.parse(getCookie('userInfo')).processID,
+        processCode: JSON.parse(getCookie('userInfo')).processCode,
+        workType: 'O',
         codeInfo: this.codeInfo,
-        userID: JSON.parse(getSession('userInfo')).userID,
-        workType: 'O'
-      }).then((data)=>{
-        this.info = data
-        this.msg = msge[4]
-       
-      }).catch((e)=>{
-        console.log('ffff', e)
-        this.msg = msge[5]
+        userID: JSON.parse(getCookie('userInfo')).userID,
+        uuid: this.uuid
+      }
+      if(this.isWL){
+        params['lineID'] = this.line.id
+      }
+      if(this.haschuwei){
+        params['locNo'] = this.locNo
+      }
+      workProgressCommit(params).then((data)=>{
+        this.info = {totalqty: data.totalqty, styleno: data.dataDetail&&data.dataDetail[0]?data.dataDetail[0].styleno:''}
+        this.msg = msge[0]
+        this.dataDetail = data.dataDetail
+        document.getElementById("audio").play()
+      }).catch(()=>{
+        this.msg = msge[1]
+        document.getElementById("audio-err").play()
       }).finally(()=>{
-        this.$nextTick( () => {
-          this.$refs.searchInput.focus();
-        })
+        if(this.haschuwei){
+          this.$nextTick( () => {
+            this.$refs.chuwei.focus();
+            setTimeout(()=>{
+            plus.key.hideSoftKeybord()
+          },1)
+          })
+        }else{
+          this.$nextTick( () => {
+            this.$refs.searchInput.focus();
+            setTimeout(()=>{
+            plus.key.hideSoftKeybord()
+          },1)
+          })
+        }
+       
         this.invoiceNO = ''
+        this.locNo = ''
+        this.codeInfo = ''
+        this.finally = true
       })
-      // const data={
-      //   'styleno':'23',
-      //   'clrno':'233',
-      //   'size':'33',
-      //   'qty':0,
-      //   'totalqty':0
-      // }
-      // this.info = data
-      // this.msg = msge[4]
     },
 
     init(){
-      getProcess().then((data)=>{
-        this.zc = data.map(i=>{return {...i, text: i.name, value: i.id}})
-      })
-      if(this.process.text!='物流'){
-        getLines({
-          factoryID: JSON.parse(getSession('userInfo')).factoryID
-        }).then((data)=>{
-          this.cx = data.map(i=>{return {...i, text: i.name, value: i.id}}).slice(0)
-          this.msg = msge[3]
-          this.$nextTick( () => {
-            this.$refs.searchInput&&this.$refs.searchInput.focus();
-          })
+      if(this.haschuwei){
+        this.$nextTick( () => {
+          this.$refs.chuwei.focus();
+          setTimeout(()=>{
+            plus.key.hideSoftKeybord()
+          },1)
         })
+        this.isCwFocus = true
       }else{
-        getLines({
-          factoryID: JSON.parse(getSession('userInfo')).factoryID
-        }).then((data)=>{
-          this.cx = data.map(i=>{return {...i, text: i.name, value: i.id}}).slice(0)
-          this.msg = msge[1]
+        this.$nextTick( () => {
+          this.$refs.searchInput.focus();
+          setTimeout(()=>{
+            plus.key.hideSoftKeybord()
+          },1)
         })
+        this.isFocus = true;
       }
+    },
+
+    onClickLeft(){
+      if(this.finally){
+        Dialog.confirm({
+          message: '需点击扫描完成',
+        })
+        .then(() => {
+        //  this.$router.back()
+        })
+        .catch(() => {
+          // on cancel
+        });
+      }else{
+        Dialog.confirm({
+          message: '确认返回',
+        })
+        .then(() => {
+        this.$router.back()
+        })
+        .catch(() => {
+          // on cancel
+        });
+      }
+    },
+
+    onComplete(){
+      Dialog.confirm({
+        message: '确认扫描完成',
+      })
+      .then(() => {
+       this.$router.back()
+      })
+      .catch(() => {
+        // on cancel
+      });
     }
   }
 }
@@ -315,9 +413,7 @@ export default {
     color: rgb(25, 137, 250);
   }
 
-.out-bound{
-  padding-top: 70px;
-
+.in-bound{
   .msg{
     height: 100px;
     line-height: 100px;
@@ -327,11 +423,15 @@ export default {
   text-align: center;
   border-radius: 10px;
   font-size: 32px;
+
   &.err{
-    background: #f9f2f4;
+    background: rgba(245, 108, 108, 0.5);
     color: red;
   }
+
   }
+
+
 
   .info{
     padding: 40px 30px 50px;
@@ -396,4 +496,10 @@ export default {
     flex: 1;
   }
 }
+
+.btns{
+  text-align: center;
+  margin-top: 60px;
+}
 </style>
+

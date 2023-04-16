@@ -15,3 +15,6 @@ import { post, get } from '@/api/httpService'
  export function getVer () {
   return get(`/api/1/mobile/getVer`)
 }
+ export function getFactorys () {
+  return get(`/api/1/mobile/getFactorys`)
+}

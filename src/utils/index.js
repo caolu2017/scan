@@ -41,6 +41,14 @@ export function setCookie (name, value) {
  
   localStorage.setItem(name,value)
 }
+export function removeCookie (name, value) {
+  if(name){
+    console.log('hahaha', name)
+    localStorage.removeItem(name)
+  }else {
+    localStorage.clear()
+  }
+}
 export function getSession (cname) {
   // return localStorage.getItem(cname)
   return sessionStorage.getItem(cname) 

@@ -1,5 +1,5 @@
 <template>
-  <div class="home">
+  <div>
     <router-view />
     <van-tabbar v-model="active" active-color="#1989FA">
       <van-tabbar-item to="/" replace>
@@ -42,16 +42,16 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.out {
-  /deep/ img{
-    transform: scale(-1,1);
-  }
-}
-/deep/ .van-tabbar-item--active a{
-  color:#1989FA !important;
-}
+// .out {
+//   /deep/ img{
+//     transform: scale(-1,1);
+//   }
+// }
+// /deep/ .van-tabbar-item--active a{
+//   color:#1989FA !important;
+// }
 
-/deep/ .van-tabbar-item a{
-  color:#000;
-}
+// /deep/ .van-tabbar-item a{
+//   color:#000;
+// }
 </style>

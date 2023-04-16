@@ -19,6 +19,8 @@ import './utils/initRem'
 import ResizeObserver from 'resize-observer-polyfill'
 window.ResizeObserver = ResizeObserver
 import Vconsole from 'vconsole'
+// import UUID from "vue-uuid";
+
  
 // var vConsole = new Vconsole()
  
@@ -28,6 +30,7 @@ import Vconsole from 'vconsole'
 Vue.use(Lazyload)
 Vue.use(Vant)
 Vue.use(Toast)
+// Vue.use(UUID)
 
 Vue.config.productionTip = false
 Toast.setDefaultOptions({ duration: 20000 })

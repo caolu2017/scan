@@ -5,21 +5,21 @@
     <van-cell-group inset>
       <van-field
         v-model="loginName"
-        name="登入密碼"
-        placeholder="輸入登入賬號"
-        :rules="[{ required: true, message: '請填寫登入賬號' }]"
+        name="登录账号"
+        placeholder="输入登录账号"
+        :rules="[{ required: true, message: '请填写登录账号' }]"
       />
       <van-field
         v-model="loginPwd"
         type="password"
-        name="登入密碼"
-        placeholder="輸入登入密碼"
-        :rules="[{ required: true, message: '請填寫登入密碼' }]"
+        name="登录密码"
+        placeholder="輸录登录密码"
+        :rules="[{ required: true, message: '请填写登录密码' }]"
       />
     </van-cell-group>
     <div style="margin: 16px;">
       <van-button round block type="primary" native-type="submit">
-        登入
+        登录
       </van-button>
       
     </div>
@@ -32,7 +32,7 @@
 
 <script>
 import {login, getVer} from '@/api'
-import { setSession, setCookie } from '@/utils';
+import { setSession, setCookie, getCookie } from '@/utils';
 import constant from '@/conf/constant'
 export default {
   data () {
@@ -40,11 +40,14 @@ export default {
       loginName:'',
       loginPwd: '',
       active: 0,
-      nativeVersion: ''
+      nativeVersion: '',
     }
   },
   created(){
-    
+    if(getCookie('code')&&JSON.parse(getCookie('code'))){
+      this.loginName = JSON.parse(getCookie('code')).loginName
+      this.loginPwd = JSON.parse(getCookie('code')).loginPwd
+    }
   },
   mounted(){
     let that = this;
@@ -120,6 +123,7 @@ downloadApk(url){
         console.log('登录', res)
         setSession('userInfo', JSON.stringify(res))
         setCookie('userInfo', JSON.stringify(res))
+        setCookie('code', JSON.stringify({...res, loginPwd: this.loginPwd}))
         this.$router.push('/')
       })
     }
