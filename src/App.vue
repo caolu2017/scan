@@ -82,3 +82,24 @@ downloadApk(url){
   }
 }
 </script>
+
+<style>
+.van-field__label{
+  color: #000!important;
+}
+
+.van-cell-group--inset{
+  margin: 0 30px!important;
+}
+
+.van-cell{
+padding: 20px!important;
+
+font-size: 38px!important;
+
+}
+
+.van-field__label{
+  font-size: 38px!important;
+}
+</style>

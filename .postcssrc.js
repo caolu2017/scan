@@ -8,7 +8,7 @@ module.exports = {
     "autoprefixer": {},
     'postcss-pxtorem': {
       rootValue ({ file }) {
-        return file.indexOf('vant') !== -1 ? 37.5 : 75
+        return file.indexOf('vant') !== -1 ? 32 : 75
       },
       // 配置要转换的 CSS 属性
       // * 表示所有

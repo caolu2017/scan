@@ -61,12 +61,13 @@ export function get (url, params) {
       if (data.code == 0 || data.code == 200) {
         resolve(data.data)
       } else {
-        Toast({
-          duration: 1000, // 持续展示 toast
-          forbidClick: true,
-          message: response.msg || '请求失败',
-        })
-        reject(data.data && data.data.msg)
+        // Toast({
+        //   duration: 1000, // 持续展示 toast
+        //   forbidClick: true,
+        //   message: response.msg || '请求失败',
+        // })
+        console.log('kkkk', data.data)
+        reject(data.msg)
       }
     }).catch(error => {
       Toast({
@@ -98,20 +99,21 @@ export function post (url, params) {
       if (data.code == 0||data.code == 200) {
         resolve(data.data)
       } else {
-        Toast({
-          duration: 1000, // 持续展示 toast
-          forbidClick: true,
-          message: response.msg || '请求失败',
-        })
-        reject(data.data && data.data.msg)
+        // Toast({
+        //   duration: 1000, // 持续展示 toast
+        //   forbidClick: true,
+        //   message: response.msg || '请求失败',
+        // })
+        console.log('kkkk', data.msg)
+        reject(data.msg)
       }
     }).catch(error => {
       console.log(error, 'error')
-      Toast({
-        duration: 1000, // 持续展示 toast
-        forbidClick: true,
-        message: '请求失败',
-      })
+      // Toast({
+      //   duration: 1000, // 持续展示 toast
+      //   forbidClick: true,
+      //   message: '请求错误',
+      // })
       reject(error)
     })
   })

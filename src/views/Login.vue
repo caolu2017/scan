@@ -21,6 +21,9 @@
       <van-button round block type="primary" native-type="submit">
         登录
       </van-button>
+      <van-button round block style="marginTop: 30px" type="info" @click="quit">
+        退出登录
+      </van-button>
       
     </div>
   </van-form>
@@ -60,6 +63,9 @@ export default {
     },false);
   },
   methods: {
+    quit(){
+      plus.runtime.quit()
+    },
     // 获取当前版本号
     getNativeVersion(){
       let that = this;

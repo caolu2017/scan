@@ -74,7 +74,7 @@ export default {
 <style scoped lang="scss">
 .title{
   padding: 20px 20px;
-  font-size: 28px;
+  font-size: 36px;
   background: #eee;
   margin-top: 0;
 }
@@ -90,7 +90,7 @@ export default {
 
 .content{
   padding: 20px 0 20px 150px;
-  font-size: 30px;
+  font-size: 36px;
   font-weight: 500;
 }
 

@@ -18,3 +18,9 @@ import { post, get } from '@/api/httpService'
  export function getFactorys () {
   return get(`/api/1/mobile/getFactorys`)
 }
+ export function clearTickets (data) {
+  return post(`/api/1/mobile/clearTickets`, data)
+}
+ export function finishScan (data) {
+  return post(`/api/1/mobile/finishScan`, data)
+}
