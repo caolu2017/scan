@@ -37,6 +37,7 @@
 import {login, getVer} from '@/api'
 import { setSession, setCookie, getCookie } from '@/utils';
 import constant from '@/conf/constant'
+import { Toast } from 'vant'
 export default {
   data () {
     return {
@@ -83,8 +84,8 @@ export default {
       })
     },
 
-// 下载apk文件
-downloadApk(url){
+  // 下载apk文件
+  downloadApk(url){
     let that = this;
     console.log('url', `${constant.WEB_SERVER}/uploads/gp.apk`)
     plus.downloader.createDownload( `${constant.WEB_SERVER}/uploads/gp.apk`, {filename: "_doc/update/"}, function(d, status){
@@ -110,18 +111,9 @@ downloadApk(url){
           plus.nativeUI.alert('下载失败')
         }
     }).start();
-},
+  },
 
     onSubmit(){
-      // const res = {
-      //   'userID': 1,
-      //   'loginName':'admin',
-      //   'userName':'admin',
-      //   'factoryID':1,
-      //   'factoryname':'TOP',
-      // }
-      
-      
       login({
         loginName: this.loginName,
         loginPwd: this.loginPwd
@@ -131,6 +123,12 @@ downloadApk(url){
         setCookie('userInfo', JSON.stringify(res))
         setCookie('code', JSON.stringify({...res, loginPwd: this.loginPwd}))
         this.$router.push('/')
+      }).catch(msg=>{
+        msg && Toast({
+          duration: 1500, 
+          forbidClick: true,
+          message: msg,
+        })
       })
     }
   }

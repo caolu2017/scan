@@ -46,6 +46,13 @@
     </van-cell-group>
   </van-form>
 
+  <div style="padding: 20px">
+    <van-checkbox v-model="isCheckClrSizeUk" shape="square" @change="handleChange">
+      <span class="checkColor">检查颜色尺码</span>
+    </van-checkbox>
+  </div>
+   
+  
   <div style="padding: 30px;">
     <van-button type="info" block style="marginTop: 50px;" @click="jump">开始扫描</van-button>
   </div>
@@ -55,9 +62,9 @@
 </template>
 
 <script>
-import { getSession, getCookie, removeCookie } from '@/utils';
+import { getSession, getCookie, setCookie } from '@/utils';
 import { Dialog } from 'vant';
-import { getLines, getFactorys } from '@/api';
+import { getLines, getFactorys  } from '@/api';
 import { uuid } from 'vue-uuid';
 
 export default {
@@ -74,8 +81,11 @@ export default {
       cx:[],
       factorys:[],
       msg:'',
+      isCheckClrSizeUk: 0,
       isWL: JSON.parse(getCookie('userInfo')).processCode=='WL',
-      title: this.$route.query.path=='in'?'入库扫描':'出库扫描'
+      title: this.$route.query.path=='in'?'入库扫描':'出库扫描',
+      key: this.$route.query.path=='in'?'inline':'outline',
+      key1: this.$route.query.path=='in'?'incheck':'outcheck',
     }
   },
   watch: {
@@ -85,15 +95,20 @@ export default {
 created(){
   this.getFactorys()
   this.getLins()
+  if(getCookie(this.key)&&JSON.parse(getCookie(this.key))){
+    const line = JSON.parse(getCookie(this.key))
+    this.line ={
+      txt: line.txt,
+      value:line.value
+    }
+  }
+  if(getCookie(this.key1)){
+    const check = getCookie(this.key1)
+    this.isCheckClrSizeUk = check=='1'?true:false
+  }
 },
+
   methods: {
-    jumpIn(){
-      this.$router.push('/in')
-    },
-    jumpOut(){
-      this.$router.push('/out')
-    },
-  
     getLins(){
       getLines({
           factoryID: this.factoryID
@@ -125,6 +140,8 @@ created(){
       }
       this.showPicker2 = false
       this.msg = ''
+      // this.loginName = JSON.parse(getCookie('code')).loginName
+      setCookie(this.key, JSON.stringify(this.line))
     },
     onfactory(e){
       console.log('e', e)
@@ -141,15 +158,17 @@ created(){
           path: `/${this.$route.query.path}`,
           query:{
             line: this.line,
-            uuid: uuid.v1()
+            uuid: uuid.v1(),
+            isCheckClrSizeUk: this.isCheckClrSizeUk?1:0
           }
         })
       }else {
         this.msg = '制程获取完成，请选择产线'
-      }
-      
-      
-    }
+      }  
+    },
+    handleChange(e){
+      setCookie(this.key1, e?'1':'0')
+    } 
   }
 }
 </script>
@@ -172,6 +191,10 @@ created(){
     font-size: 32px;
     background: rgba(245, 108, 108, 0.5);
     color: red;
+  }
+
+  .checkColor{
+    font-size: 36px;
   }
 
 </style>

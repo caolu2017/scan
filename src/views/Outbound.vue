@@ -35,7 +35,11 @@
         readonly
         label="产线"
       />
-      
+      <van-field name="isCheckClrSizeUk" label="检查颜色尺码">
+        <template #input>
+          <van-checkbox class="disabled" v-model="isCheckClrSizeUk" shape="square" />
+        </template>
+      </van-field>
       <van-field 
       :class="isCwFocus?'active-input':''" 
       v-model="locNo" 
@@ -130,6 +134,7 @@ export default {
       process: {text: JSON.parse(getCookie('userInfo')).processName},
       line: this.$route.query.line,
       uuid: this.$route.query.uuid,
+      isCheckClrSizeUk: this.$route.query.isCheckClrSizeUk==1?true:false,
       cx: [],
       info: {},
       factoryname: JSON.parse(getCookie('userInfo')).factoryname,
@@ -276,7 +281,8 @@ export default {
         workType: 'O',
         codeInfo: this.codeInfo,
         userID: JSON.parse(getCookie('userInfo')).userID,
-        uuid: this.uuid
+        uuid: this.uuid,
+        isCheckClrSizeUk: this.isCheckClrSizeUk?1:0
       }
       if(this.isWL){
         params['lineID'] = this.line.id
@@ -285,7 +291,7 @@ export default {
         params['locNo'] = this.locNo
       // }
       workProgressCommit(params).then((data)=>{
-        this.info = {totalqty: data.totalqty, styleno: data.dataDetail&&data.dataDetail[0]?data.dataDetail[0].styleno:''}
+        this.info = {totalqty: data.totalqty, ticketQty: data.ticketQty, styleno: data.dataDetail&&data.dataDetail[0]?data.dataDetail[0].styleno:''}
         this.msg = msge[0]
         this.dataDetail = data.dataDetail
         document.getElementById("audio").play()
@@ -399,6 +405,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.disabled{
+  cursor:not-allowed;
+  pointer-events:none;
+}
 .header{
   height: 50px;
   padding: 0 30px;
@@ -445,6 +455,7 @@ export default {
   &.err{
     background: rgba(245, 108, 108, 0.5);
     color: red;
+    font-size: 30px;
   }
 
   }
